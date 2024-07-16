@@ -24,10 +24,10 @@ class SparseDense(tf.keras.layers.Layer):
             return tf.matmul(inputs, self.w) + self.b
 
     def apply_sparsity(self, weights):
-        num_elements = tf.size(weights).numpy()
-        k = int(self.sparsity_level * num_elements)
-        k = min(k, num_elements)
-        k = max(k, 1)  # Ensure k is at least 1
+        num_elements = tf.size(weights)
+        k = tf.cast(self.sparsity_level * tf.cast(num_elements, tf.float32), tf.int32)
+        k = tf.minimum(k, num_elements)
+        k = tf.maximum(k, 1)  # Ensure k is at least 1
 
         abs_weights = tf.math.abs(weights)
         top_k_values = tf.math.top_k(tf.reshape(abs_weights, [-1]), k=k).values
