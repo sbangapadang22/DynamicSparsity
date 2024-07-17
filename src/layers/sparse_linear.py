@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import math
 
 class SparseLinear(nn.Module):
@@ -11,29 +10,30 @@ class SparseLinear(nn.Module):
         self.sparsity_level = sparsity_level
         self.weight = nn.Parameter(torch.Tensor(out_features, in_features))
         self.bias = nn.Parameter(torch.Tensor(out_features))
+        self.prune_mask = nn.Parameter(torch.ones(out_features, in_features), requires_grad=False)
         self.reset_parameters()
 
     def reset_parameters(self):
         nn.init.kaiming_uniform_(self.weight, a=math.sqrt(5))
-        nn.init.zeros_(self.bias)
+        if self.bias is not None:
+            fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.weight)
+            bound = 1 / math.sqrt(fan_in)
+            nn.init.uniform_(self.bias, -bound, bound)
 
     def forward(self, input):
-        if self.training:
-            # Apply sparsity during training
-            sparse_weight = self.apply_sparsity(self.weight)
-            return F.linear(input, sparse_weight, self.bias)
-        else:
-            return F.linear(input, self.weight, self.bias)
+        pruned_weight = self.weight * self.prune_mask
+        return nn.functional.linear(input, pruned_weight, self.bias)
 
     def apply_sparsity(self, weights):
         num_elements = weights.numel()
         k = int(self.sparsity_level * num_elements)
-        k = min(k, num_elements)
-        k = max(k, 1)  # Ensure k is at least 1
+        k = max(1, k)  # Ensure k is at least 1
 
-        abs_weights = torch.abs(weights)
-        top_k_values, _ = torch.topk(abs_weights.view(-1), k)
-        threshold = top_k_values[-1]
+        abs_weights = weights.abs()
+        threshold = abs_weights.view(-1).kthvalue(k).values.item()
         mask = abs_weights >= threshold
-        sparse_weights = torch.where(mask, weights, torch.zeros_like(weights))
+        sparse_weights = weights * mask.float()
         return sparse_weights
+
+    def update_prune_mask(self):
+        self.prune_mask.data = self.apply_sparsity(self.weight).ne(0).float()

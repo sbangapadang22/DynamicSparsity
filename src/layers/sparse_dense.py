@@ -13,6 +13,9 @@ class SparseDense(tf.keras.layers.Layer):
         self.b = self.add_weight(shape=(self.units,),
                                  initializer='zeros',
                                  trainable=True)
+        self.prune_mask = self.add_weight(shape=(input_shape[-1], self.units),
+                                          initializer='ones',
+                                          trainable=False)
         super(SparseDense, self).build(input_shape)
 
     def call(self, inputs, training=False):
