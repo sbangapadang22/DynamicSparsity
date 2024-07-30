@@ -24,11 +24,10 @@ def main():
     # Prepare the data
     train_data = tf.random.normal((1000, 784))
     train_labels = tf.random.uniform((1000,), maxval=10, dtype=tf.int32)
-    train_data = tf.data.Dataset.from_tensor_slices(train_data).batch(32)
-    train_labels = tf.data.Dataset.from_tensor_slices(train_labels).batch(32)
+    train_data = tf.data.Dataset.from_tensor_slices((train_data, train_labels)).shuffle(buffer_size=1000).batch(32)
 
     # Train the model with the custom training loop
-    custom_training_loop(model, scheduler, epochs=10, train_data=train_data, train_labels=train_labels)
+    custom_training_loop(model, scheduler, epochs=10, train_data=train_data)
 
 if __name__ == '__main__':
     main()

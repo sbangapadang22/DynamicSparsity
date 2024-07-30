@@ -24,13 +24,12 @@ class TestCustomTraining(unittest.TestCase):
         # Prepare the data
         self.train_data = tf.random.normal((1000, 784))
         self.train_labels = tf.random.uniform((1000,), maxval=10, dtype=tf.int32)
-        self.train_data = tf.data.Dataset.from_tensor_slices(self.train_data).batch(32)
-        self.train_labels = tf.data.Dataset.from_tensor_slices(self.train_labels).batch(32)
+        self.train_data = tf.data.Dataset.from_tensor_slices((self.train_data, self.train_labels)).batch(32)
 
     def test_custom_training_loop(self):
         # Manually set the model for the scheduler
         self.scheduler.set_model(self.model)
-        custom_training_loop(self.model, self.scheduler, epochs=self.total_epochs, train_data=self.train_data, train_labels=self.train_labels)
+        custom_training_loop(self.model, self.scheduler, epochs=self.total_epochs, train_data=self.train_data)
 
 if __name__ == '__main__':
     unittest.main()
