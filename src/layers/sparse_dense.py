@@ -1,14 +1,15 @@
 import tensorflow as tf
 
 class SparseDense(tf.keras.layers.Layer):
-    def __init__(self, units, sparsity_level=0.5, **kwargs):
+    def __init__(self, units, sparsity_level=0.5, kernel_initializer='glorot_uniform', **kwargs):
         super(SparseDense, self).__init__(**kwargs)
         self.units = units
         self.sparsity_level = sparsity_level
+        self.kernel_initializer = tf.keras.initializers.get(kernel_initializer)
 
     def build(self, input_shape):
         self.w = self.add_weight(shape=(input_shape[-1], self.units),
-                                 initializer='random_normal',
+                                 initializer=self.kernel_initializer,
                                  trainable=True)
         self.b = self.add_weight(shape=(self.units,),
                                  initializer='zeros',
@@ -43,6 +44,7 @@ class SparseDense(tf.keras.layers.Layer):
         config = super(SparseDense, self).get_config()
         config.update({
             'units': self.units,
-            'sparsity_level': self.sparsity_level
+            'sparsity_level': self.sparsity_level,
+            'kernel_initializer': tf.keras.initializers.serialize(self.kernel_initializer)
         })
         return config

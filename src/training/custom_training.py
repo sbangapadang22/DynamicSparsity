@@ -1,7 +1,14 @@
 import tensorflow as tf
 
-def custom_training_loop(model, scheduler, epochs, train_data):
-    optimizer = tf.keras.optimizers.Adam()
+def custom_training_loop(model, scheduler, epochs, train_data, val_data=None):
+    initial_learning_rate = 0.001
+    lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+        initial_learning_rate,
+        decay_steps=100,
+        decay_rate=0.96,
+        staircase=True)
+
+    optimizer = tf.keras.optimizers.Adam(learning_rate=lr_schedule)
     loss_fn = tf.keras.losses.SparseCategoricalCrossentropy()
 
     # Manually set the model in the scheduler
@@ -24,7 +31,17 @@ def custom_training_loop(model, scheduler, epochs, train_data):
             if step % 10 == 0:
                 print(f'Step {step}, Loss: {loss_value.numpy()}')
 
-        print(f'Epoch {epoch+1} Loss: {loss_value.numpy()}')
+        # Evaluate on validation set if provided
+        if val_data:
+            val_loss = 0
+            val_steps = 0
+            for batch_data, batch_labels in val_data:
+                val_logits = model(batch_data, training=False)
+                val_loss += loss_fn(batch_labels, val_logits).numpy()
+                val_steps += 1
+
+            val_loss /= val_steps
+            print(f'Epoch {epoch+1} Loss: {loss_value.numpy()}, Validation Loss: {val_loss}')
 
         # Debug: Print sparsity levels
         for layer in model.layers:
