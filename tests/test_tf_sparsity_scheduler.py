@@ -25,6 +25,9 @@ class TestTFSparsityScheduler(unittest.TestCase):
                                       total_epochs=self.total_epochs, 
                                       criteria='linear')
 
+        # Manually set the model for the callback
+        scheduler.set_model(self.model)
+
         # Fit the model for one epoch to initialize the scheduler
         self.model.fit(tf.random.normal((10, 784)), tf.random.uniform((10,), maxval=10, dtype=tf.int32), epochs=1, callbacks=[scheduler])
 
@@ -43,6 +46,9 @@ class TestTFSparsityScheduler(unittest.TestCase):
                                       total_epochs=self.total_epochs, 
                                       criteria='weight_magnitude', 
                                       weight_threshold=0.1)
+
+        # Manually set the model for the callback
+        scheduler.set_model(self.model)
 
         # Fit the model for one epoch to initialize the scheduler
         self.model.fit(tf.random.normal((10, 784)), tf.random.uniform((10,), maxval=10, dtype=tf.int32), epochs=1, callbacks=[scheduler])

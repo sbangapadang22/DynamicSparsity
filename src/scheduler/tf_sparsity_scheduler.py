@@ -8,6 +8,10 @@ class SparsityScheduler(tf.keras.callbacks.Callback):
         self.total_epochs = total_epochs
         self.criteria = criteria
         self.weight_threshold = weight_threshold
+        self._model = None
+
+    def set_model(self, model):
+        self._model = model
 
     def on_epoch_begin(self, epoch, logs=None):
         if self.criteria == 'linear':
@@ -20,7 +24,7 @@ class SparsityScheduler(tf.keras.callbacks.Callback):
             raise ValueError(f"Unknown sparsity adjustment criteria: {self.criteria}")
 
         # Update sparsity level in all sparse layers
-        for layer in self.model.layers:
+        for layer in self._model.layers:
             if hasattr(layer, 'sparsity_level'):
                 layer.sparsity_level = sparsity
 
@@ -28,7 +32,7 @@ class SparsityScheduler(tf.keras.callbacks.Callback):
         total_weights = 0
         prune_weights = 0
 
-        for layer in self.model.layers:
+        for layer in self._model.layers:
             if hasattr(layer, 'weights') and len(layer.get_weights()) > 0:
                 weights = layer.get_weights()[0]
                 total_weights += weights.size
