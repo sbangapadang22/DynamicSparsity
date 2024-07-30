@@ -21,7 +21,7 @@ def test_sparse_dense_forward_backward():
     output = model(input_data)
     assert output.shape == (10, 10), "Forward pass output shape is incorrect."
 
-    # Train the model for a few epochs
+    # Train the model for a few epochs34e
     model.fit(input_data, labels, epochs=5)
 
     # Check if gradients are correctly applied
